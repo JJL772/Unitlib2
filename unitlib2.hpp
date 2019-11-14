@@ -27,6 +27,23 @@ Rather than using static libraries, this just gets included into a translation u
 #include <iostream>
 #include <math.h>
 
+#ifdef USE_X86_PERF_COUNTERS
+#define READ_MSR(idex, lo, hi) asm volatile ("movl %2, %%ecx\n\t" \
+									"rdmsr\n\t" \
+									"movl %%edx, %0\n\t" \
+									"movl %%eax, %1\n\t" \
+									: "=m"(hi), "=m"(lo) \
+									: "m"(idex) \
+									: "ecx", "eax", "edx" )
+#define READ_PMC(idex,hi,lo) asm volatile ("movl %2, %%ecx\n\t" \
+									"rdpmc\n\t" \
+									"movl %%edx, %0\n\t" \
+									"movl %%eax, %1\n\t" \
+									: "=m"(hi), "=m"(lo) \
+									: "m"(idex) \
+									: "ecx", "eax", "edx" )
+#endif
+
 #define DECLARE_TEST_SUITE(var) extern CUnitTestSuite* var;
 
 #define DEFINE_TEST_SUITE(var, name) CUnitTestSuite* var = new CUnitTestSuite(name)
@@ -430,6 +447,7 @@ class CSteppedPerfTest : public CPerfTest
 {
 private:
 	std::list<unsigned long long> Times;
+	std::list<unsigned int> 
 public:
 
 	CSteppedPerfTest(std::string name) :
